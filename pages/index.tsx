@@ -10,21 +10,36 @@ interface SetMethod {
   (v: PDFDocument): any;
 }
 
-const getPdfUrl = (bytes: Uint8Array) => {
+const getPdfUrl = async (doc: PDFDocument) => {
+  const bytes = await doc.save();
   return URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+};
+
+const setPdfUrl = async (doc: PDFDocument, settr: any) => {
+  const url = await getPdfUrl(doc);
+  if (settr) settr(url);
 };
 
 export default function Home() {
   const [topPDF, setTopPDF] = useState<PDFDocument>();
+  const [topPdfUrl, setTopPdfUrl] = useState<string>("");
   const [scriptPDF, setScriptPDF] = useState<PDFDocument>();
-  const [pdfURL, setPdfUrl] = useState<string>("");
+  const [scriptPdfUrl, setScriptPdfUrl] = useState<string>("");
+  const [mergedPDF, setMergedPDF] = useState<PDFDocument>();
+  const [mergedPdfUrl, setMergedPdfUrl] = useState<string>("");
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
     if (topPDF) {
-      console.log(topPDF);
+      setPdfUrl(topPDF, setTopPdfUrl);
     }
   }, [topPDF]);
+
+  useEffect(() => {
+    if (scriptPDF) {
+      setPdfUrl(scriptPDF, setScriptPdfUrl);
+    }
+  }, [scriptPDF]);
 
   const readAndSetPDF = async (files: FileList, set: SetMethod) => {
     const reader = new FileReader();
@@ -56,17 +71,23 @@ export default function Home() {
   const merge = async () => {
     if (topPDF && scriptPDF) {
       setError("");
-      const scriptPages = await topPDF.copyPages(
+      const mergedPdfDoc = await PDFDocument.create();
+      const TopPages = await mergedPdfDoc.copyPages(
+        topPDF,
+        topPDF.getPageIndices()
+      );
+      TopPages.map((page) => mergedPdfDoc.addPage(page));
+
+      const scriptPages = await mergedPdfDoc.copyPages(
         scriptPDF,
         scriptPDF.getPageIndices()
       );
-      scriptPages.map((page) => {
-        topPDF.addPage(page);
-      });
+      scriptPages.map((page) => mergedPdfDoc.addPage(page));
 
-      const pdfBytes = await topPDF.save();
-      const pdfURL = getPdfUrl(pdfBytes);
-      setPdfUrl(pdfURL);
+      setMergedPDF(mergedPdfDoc);
+
+      const pdfURL = await getPdfUrl(mergedPdfDoc);
+      setMergedPdfUrl(pdfURL);
     } else {
       setError("Please choose the Top Page and the Script Page first to Merge");
     }
@@ -97,7 +118,7 @@ export default function Home() {
           <div className="flex flex-col justify-center items-center border-r-4 border-gray-600">
             <label
               htmlFor="topPage"
-              className="mb-5 text-xl mb-auto bg-gray-700 w-full text-center text-white py-5 select-none cursor-pointer"
+              className="text-xl mb-auto bg-gray-700 w-full text-center text-white py-5 select-none cursor-pointer"
             >
               Select Top Page
             </label>
@@ -110,22 +131,37 @@ export default function Home() {
                 className="mb-auto ml-24"
               />
             )}
-            {topPDF && <h1>PDF</h1>}
+            {topPDF && topPdfUrl && (
+              <div className="mb-auto h-2/3">
+                <PdfViewer url={topPdfUrl} />
+                <h3 className="text-center">{topPDF.getPageCount()} Pages</h3>
+              </div>
+            )}
           </div>
           <div className="flex flex-col justify-center items-center">
             <label
               htmlFor="scriptPage"
-              className="mb-5 text-xl mb-auto bg-gray-500 w-full text-center text-white py-5 select-none cursor-pointer"
+              className="text-xl mb-auto bg-gray-500 w-full text-center text-white py-5 select-none cursor-pointer"
             >
               Select Script Page
             </label>
-            <input
-              id="scriptPage"
-              type="file"
-              onChange={(e) => fileChangeHandler(e)}
-              accept=".pdf"
-              className="mb-auto ml-24"
-            />
+            {!scriptPDF && (
+              <input
+                id="scriptPage"
+                type="file"
+                onChange={(e) => fileChangeHandler(e)}
+                accept=".pdf"
+                className="mb-auto ml-24"
+              />
+            )}
+            {scriptPDF && scriptPdfUrl && (
+              <div className="mb-auto h-2/3">
+                <PdfViewer url={scriptPdfUrl} />
+                <h3 className="text-center">
+                  {scriptPDF.getPageCount()} Pages
+                </h3>
+              </div>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-1">
@@ -136,7 +172,7 @@ export default function Home() {
           )}
         </div>
         <div className="bg-gray-600 h-3/6 flex gap-24 items-center justify-center">
-          {!pdfURL && (
+          {!mergedPdfUrl && (
             <button
               className="bg-green-600 p-5 px-32 text-white text-3xl rounded-lg"
               onClick={merge}
@@ -144,15 +180,22 @@ export default function Home() {
               Merge
             </button>
           )}
-          {pdfURL && <PdfViewer url={pdfURL} />}
-          {pdfURL && (
-            <a
-              href={pdfURL + "#toolbar=0&navpanes=0"}
-              className="bg-green-600 p-5 px-32 text-white text-3xl rounded-lg"
-              download
-            >
-              Download
-            </a>
+          {mergedPdfUrl && (
+            <>
+              <div className="h-2/3">
+                <PdfViewer url={mergedPdfUrl} />
+                <h3 className="text-center">
+                  {mergedPDF?.getPageCount()} Pages
+                </h3>
+              </div>
+              <a
+                href={mergedPdfUrl}
+                className="bg-green-600 p-5 px-32 text-white text-3xl rounded-lg"
+                download
+              >
+                Download
+              </a>
+            </>
           )}
         </div>
       </main>

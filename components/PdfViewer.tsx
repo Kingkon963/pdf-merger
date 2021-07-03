@@ -11,7 +11,11 @@ const PdfViewer = ({ url }: { url: string }) => {
   return (
     <>
       {pdfUrl && (
-        <iframe src={pdfUrl} data-type="application/pdf" className="h-1/2" />
+        <iframe
+          src={pdfUrl + "#toolbar=0&navpanes=0"}
+          data-type="application/pdf"
+          className="h-full"
+        />
       )}
     </>
   );
