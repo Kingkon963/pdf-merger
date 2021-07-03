@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import { PDFDocument, PageSizes } from "pdf-lib";
@@ -31,22 +31,22 @@ export default function Home() {
     }
   };
 
-  const setPdfUrl = async (doc: PDFDocument, settr: any) => {
+  const setPdfUrl = useCallback(async (doc: PDFDocument, settr: any) => {
     const url = await getPdfUrl(doc);
     if (settr) settr(url);
-  };
+  }, []);
 
   useEffect(() => {
     if (topPDF) {
       setPdfUrl(topPDF, setTopPdfUrl);
     }
-  }, [topPDF]);
+  }, [setPdfUrl, topPDF]);
 
   useEffect(() => {
     if (scriptPDF) {
       setPdfUrl(scriptPDF, setScriptPdfUrl);
     }
-  }, [scriptPDF]);
+  }, [scriptPDF, setPdfUrl]);
 
   const readAndSetPDF = async (files: FileList, set: SetMethod) => {
     const reader = new FileReader();
