@@ -108,6 +108,7 @@ export default function Home() {
           name="description"
           content="PDF merger created for AUST students"
         />
+        <meta httpEquiv="content-language" content="en-us" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
