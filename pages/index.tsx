@@ -94,7 +94,7 @@ export default function Home() {
       setMergedPDF(mergedPdfDoc);
 
       const pdfURL = await getPdfUrl(mergedPdfDoc);
-      setMergedPdfUrl(pdfURL);
+      if (pdfURL) setMergedPdfUrl(pdfURL);
     } else {
       setError("Please choose the Top Page and the Script Page first to Merge");
     }
