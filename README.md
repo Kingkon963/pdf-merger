@@ -1,4 +1,7 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Overview
+I've built this [pdf merging tool](https://pdf-merger.vercel.app/) using Nextjs and PDF-lib.js to have an ad free environment for merging my academic papers. 🙂
+
+
 
 ## Getting Started
 
